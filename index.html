@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<title>Fast & Furious – World Tour FX</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+canvas {
+    border: 3px solid white;
+    display: block;
+    margin: auto;
+    background: #000;
+}
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 10px;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<h1>🏎️ Fast & Furious: World Tour FX</h1>
+<div>
+    <span id="track"></span> |
+    Poeng: <span id="score">0</span>
+</div>
+
+<button onclick="startGame()">▶ Start</button>
+<button onclick="toggleMusic()">🎵 Musikk av/på</button>
+
+<canvas id="game" width="400" height="600"></canvas>
+
+<audio id="music" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/10/25/audio_9460d45f4b.mp3">
+</audio>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const music = document.getElementById("music");
+
+/* 🌍 BANER */
+const tracks = [
+{ name:"Miami", road:"#00bcd4", speed:5, colors:["#fd79a8","#ffeaa7"], env:"palms" },
+{ name:"Los Angeles", road:"#333", speed:5, colors:["#e74c3c","#f1c40f"], env:"city" },
+{ name:"New York", road:"#1e272e", speed:6, colors:["#dcdde1"], env:"rain-city" },
+{ name:"Tokyo", road:"#0b0014", speed:7, colors:["#ff00ff","#00ffff"], env:"neon-city" },
+{ name:"Rio de Janeiro", road:"#2ecc71", speed:6, colors:["#27ae60"], env:"palms" },
+{ name:"London", road:"#2f3640", speed:6, colors:["#b2bec3"], env:"rain-city" },
+{ name:"Italy", road:"#636e72", speed:6, colors:["#e74c3c","#2ecc71"], env:"mountains" },
+{ name:"Iceland", road:"#ecf0f1", speed:6, colors:["#74b9ff"], env:"snow-mountains" },
+{ name:"Norwegian Fjords", road:"#1e3799", speed:6, colors:["#81ecec"], env:"snow-mountains" }
+];
+
+let trackIndex = 0;
+let track = tracks[0];
+
+let player = { x:180,y:480,width:40,height:80,speed:7,color:"#ff0000" };
+let cars = [];
+let particles = [];
+let score = 0;
+let running = false;
+let musicOn = true;
+
+/* 🎮 */
+document.addEventListener("keydown", e => {
+    if(!running) return;
+    if(e.key==="ArrowLeft"||e.key==="a") player.x -= player.speed;
+    if(e.key==="ArrowRight"||e.key==="d") player.x += player.speed;
+});
+
+function toggleMusic(){
+    musicOn ? music.pause() : music.play();
+    musicOn=!musicOn;
+}
+
+function startGame(){
+    running=true;
+    cars=[];
+    particles=[];
+    score=0;
+    trackIndex=0;
+    track=tracks[0];
+    player.color=track.colors[0];
+    if(musicOn) music.play();
+    update();
+}
+
+/* 🚗 */
+function spawnCar(){
+    cars.push({
+        x:Math.random()*340,
+        y:-100,
+        width:40,
+        height:80,
+        speed:track.speed,
+        color:track.colors[Math.floor(Math.random()*track.colors.length)]
+    });
+}
+
+function collision(a,b){
+    return a.x<b.x+b.width&&a.x+a.width>b.x&&
+           a.y<b.y+b.height&&a.y+a.height>b.y;
+}
+
+/* 🌧️ ❄️ */
+function spawnParticles(){
+    if(track.env.includes("rain")){
+        particles.push({x:Math.random()*400,y:0,vy:10,type:"rain"});
+    }
+    if(track.env.includes("snow")){
+        particles.push({x:Math.random()*400,y:0,vy:2,type:"snow"});
+    }
+}
+
+function drawParticles(){
+    particles.forEach(p=>{
+        p.y+=p.vy;
+        if(p.type==="rain"){
+            ctx.strokeStyle="rgba(180,180,255,0.7)";
+            ctx.beginPath();
+            ctx.moveTo(p.x,p.y);
+            ctx.lineTo(p.x,p.y+10);
+            ctx.stroke();
+        } else {
+            ctx.fillStyle="white";
+            ctx.beginPath();
+            ctx.arc(p.x,p.y,2,0,Math.PI*2);
+            ctx.fill();
+        }
+    });
+    particles=particles.filter(p=>p.y<600);
+}
+
+/* 🌴 🏙️ 🏔️ */
+function drawEnvironment(){
+    if(track.env.includes("city")){
+        for(let i=0;i<6;i++){
+            ctx.fillStyle="#222";
+            ctx.fillRect(i*70,0,50,200);
+            if(track.env==="neon-city"){
+                ctx.fillStyle=["#ff00ff","#00ffff"][i%2];
+                ctx.fillRect(i*70+10,20,10,40);
+            }
+        }
+    }
+    if(track.env==="palms"){
+        ctx.fillStyle="green";
+        for(let i=0;i<5;i++){
+            ctx.fillRect(i*80+20,200,10,60);
+            ctx.beginPath();
+            ctx.arc(i*80+25,200,20,0,Math.PI);
+            ctx.fill();
+        }
+    }
+    if(track.env.includes("mountains")){
+        ctx.fillStyle="#555";
+        ctx.beginPath();
+        ctx.moveTo(0,300);
+        ctx.lineTo(100,150);
+        ctx.lineTo(200,300);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(200,300);
+        ctx.lineTo(300,170);
+        ctx.lineTo(400,300);
+        ctx.fill();
+    }
+}
+
+/* 🔄 */
+function nextTrack(){
+    trackIndex=(trackIndex+1)%tracks.length;
+    track=tracks[trackIndex];
+    player.color=track.colors[0];
+}
+
+/* 🎮 LOOP */
+function update(){
+    if(!running) return;
+
+    ctx.fillStyle=track.road;
+    ctx.fillRect(0,0,400,600);
+
+    drawEnvironment();
+    spawnParticles();
+    drawParticles();
+
+    ctx.fillStyle=player.color;
+    ctx.fillRect(player.x,player.y,player.width,player.height);
+
+    cars.forEach(c=>{
+        c.y+=c.speed;
+        ctx.fillStyle=c.color;
+        ctx.fillRect(c.x,c.y,c.width,c.height);
+        if(collision(player,c)){
+            running=false;
+            music.pause();
+            alert("💥 KRÆSJ!\nPoeng: "+score);
+        }
+    });
+
+    cars=cars.filter(c=>c.y<700);
+    if(Math.random()<0.04) spawnCar();
+
+    score++;
+    if(score%1200===0) nextTrack();
+
+    document.getElementById("track").innerText="Bane: "+track.name;
+    document.getElementById("score").innerText=score;
+
+    requestAnimationFrame(update);
+}
+</script>
+
+</body>
+</html>
