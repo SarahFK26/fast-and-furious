@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
-<title>Fast & Furious – Manual Track Switch</title>
+<title>Fast & Furious – Traffic Weave</title>
 
 <style>
 body {
@@ -27,14 +27,14 @@ button {
 </head>
 <body>
 
-<h1>🏎️ Fast & Furious – Manual Track Switch</h1>
+<h1>🏎️ Fast & Furious – Traffic Weave</h1>
 <div>
     <strong id="track">Bane: Los Angeles</strong> |
     Poeng: <span id="score">0</span>
 </div>
 
 <button onclick="startGame()">▶ Start</button>
-<p>⬅ ➡ = Styr &nbsp; | &nbsp; T = Bytt bane</p>
+<p>⬅ ➡ = Styr | T = Bytt bane</p>
 
 <canvas id="game" width="400" height="600"></canvas>
 
@@ -58,26 +58,24 @@ let track = tracks[0];
 let player = {
     x: 200,
     y: 480,
-    width: 35,
-    height: 70,
+    width: 30,
+    height: 60,
     velocity: 0
 };
 
-let cars = [];
+/* 🚧 HINDRINGER (SMÅ) */
+let obstacles = [];
 let score = 0;
 let running = false;
 
-/* 🎮 INPUT – KUN PILTASTER */
+/* 🎮 INPUT */
 let leftPressed = false;
 let rightPressed = false;
 
 document.addEventListener("keydown", e => {
     if (e.key === "ArrowLeft") leftPressed = true;
     if (e.key === "ArrowRight") rightPressed = true;
-
-    if (e.key.toLowerCase() === "t") {
-        switchTrack(); // 🔁 MANUELL BANEBYTTE
-    }
+    if (e.key.toLowerCase() === "t") switchTrack();
 });
 
 document.addEventListener("keyup", e => {
@@ -85,7 +83,7 @@ document.addEventListener("keyup", e => {
     if (e.key === "ArrowRight") rightPressed = false;
 });
 
-/* 🛣️ VEI MED PERSPEKTIV */
+/* 🛣️ VEI */
 function drawRoad() {
     ctx.fillStyle = track.road;
     ctx.beginPath();
@@ -97,32 +95,31 @@ function drawRoad() {
     ctx.fill();
 
     ctx.strokeStyle = track.edge;
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(80, 600);
     ctx.lineTo(160, 0);
     ctx.moveTo(320, 600);
     ctx.lineTo(240, 0);
     ctx.stroke();
-
-    ctx.setLineDash([20,20]);
-    ctx.strokeStyle = "#fff";
-    ctx.beginPath();
-    ctx.moveTo(200, 600);
-    ctx.lineTo(200, 0);
-    ctx.stroke();
-    ctx.setLineDash([]);
 }
 
-/* 🚓 ANDRE BILER */
-function spawnCar() {
-    cars.push({
-        x: 160 + Math.random() * 80,
-        y: -100,
-        width: 35,
-        height: 70,
+/* 🚧 SMÅ HINDRINGER */
+function spawnObstacle() {
+    const type = Math.random();
+    let size;
+
+    if (type < 0.4) size = { w: 18, h: 18 };       // kjegle
+    else if (type < 0.7) size = { w: 22, h: 40 };  // liten bil
+    else size = { w: 14, h: 30 };                  // smal sperring
+
+    obstacles.push({
+        x: 150 + Math.random() * 100,
+        y: -50,
+        width: size.w,
+        height: size.h,
         speed: track.speed + Math.random() * 2,
-        color: ["#fff","#f1c40f","#e74c3c","#2ecc71"]
+        color: ["#f39c12","#e74c3c","#ecf0f1","#f1c40f"]
             [Math.floor(Math.random()*4)]
     });
 }
@@ -134,7 +131,7 @@ function collision(a, b) {
            a.y + a.height > b.y;
 }
 
-/* 🔁 MANUELL BANEBYTTE */
+/* 🔁 BANEBYTTE */
 function switchTrack() {
     trackIndex = (trackIndex + 1) % tracks.length;
     track = tracks[trackIndex];
@@ -144,7 +141,7 @@ function switchTrack() {
 /* ▶ START */
 function startGame() {
     running = true;
-    cars = [];
+    obstacles = [];
     score = 0;
     trackIndex = 0;
     track = tracks[0];
@@ -160,30 +157,33 @@ function update() {
     drawRoad();
 
     // Myk styring
-    if (leftPressed) player.velocity -= 0.4;
-    if (rightPressed) player.velocity += 0.4;
+    if (leftPressed) player.velocity -= 0.35;
+    if (rightPressed) player.velocity += 0.35;
     player.velocity *= 0.9;
 
     player.x += player.velocity;
-    player.x = Math.max(110, Math.min(255, player.x));
+    player.x = Math.max(115, Math.min(255, player.x));
 
     // Spiller
     ctx.fillStyle = "red";
     ctx.fillRect(player.x, player.y, player.width, player.height);
 
-    cars.forEach(car => {
-        car.y += car.speed;
-        ctx.fillStyle = car.color;
-        ctx.fillRect(car.x, car.y, car.width, car.height);
+    // Hindringer
+    obstacles.forEach(o => {
+        o.y += o.speed;
+        ctx.fillStyle = o.color;
+        ctx.fillRect(o.x, o.y, o.width, o.height);
 
-        if (collision(player, car)) {
+        if (collision(player, o)) {
             running = false;
             alert("💥 KRÆSJ!\nPoeng: " + score);
         }
     });
 
-    cars = cars.filter(c => c.y < 700);
-    if (Math.random() < 0.03) spawnCar();
+    obstacles = obstacles.filter(o => o.y < 650);
+
+    // Mange små – men balansert
+    if (Math.random() < 0.12) spawnObstacle();
 
     score++;
     document.getElementById("score").innerText = score;
