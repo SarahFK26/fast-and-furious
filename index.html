@@ -34,7 +34,7 @@ button {
 </div>
 
 <button onclick="startGame()">▶ Start</button>
-<p>⬅ ➡ = Styr | T = Bytt bane</p>
+<p>⬅ ➡ = Styr | T / Space = Bytt bane</p>
 
 <canvas id="game" width="400" height="600"></canvas>
 
@@ -42,28 +42,73 @@ button {
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* 🌍 BANER */
+/* 🌍 BANER MED EGEN HINDERTYPE */
 const tracks = [
-    { name:"Los Angeles", road:"#333", edge:"#777", speed:5 },
-    { name:"Miami", road:"#00bcd4", edge:"#2ed573", speed:5 },
-    { name:"Tokyo", road:"#0b0014", edge:"#ff00ff", speed:7 },
-    { name:"London", road:"#2f3640", edge:"#718093", speed:6 },
-    { name:"Norwegian Fjords", road:"#1e3799", edge:"#81ecec", speed:6 }
+    {
+        name: "Los Angeles",
+        road: "#333",
+        edge: "#777",
+        speed: 5,
+        obstacles: [
+            { w: 10, h: 10, color: "#f1c40f" }, // kjegler
+            { w: 14, h: 26, color: "#e74c3c" }  // små biler
+        ]
+    },
+    {
+        name: "Miami",
+        road: "#00bcd4",
+        edge: "#2ed573",
+        speed: 5,
+        obstacles: [
+            { w: 12, h: 12, color: "#ffffff" }, // strandting
+            { w: 16, h: 28, color: "#ff7675" }
+        ]
+    },
+    {
+        name: "Tokyo",
+        road: "#0b0014",
+        edge: "#ff00ff",
+        speed: 7,
+        obstacles: [
+            { w: 8, h: 22, color: "#00ffea" },  // smale sperringer
+            { w: 12, h: 34, color: "#ff0055" }  // raske biler
+        ]
+    },
+    {
+        name: "London",
+        road: "#2f3640",
+        edge: "#718093",
+        speed: 6,
+        obstacles: [
+            { w: 12, h: 18, color: "#dcdde1" },
+            { w: 14, h: 30, color: "#273c75" }
+        ]
+    },
+    {
+        name: "Norwegian Fjords",
+        road: "#1e3799",
+        edge: "#81ecec",
+        speed: 5,
+        obstacles: [
+            { w: 10, h: 14, color: "#a4b0be" }, // steiner
+            { w: 12, h: 20, color: "#ced6e0" }  // isblokker
+        ]
+    }
 ];
 
 let trackIndex = 0;
 let track = tracks[0];
 
 /* 🚗 SPILLER */
-let player = {
+const player = {
     x: 200,
     y: 480,
-    width: 30,
-    height: 60,
+    width: 26,
+    height: 52,
     velocity: 0
 };
 
-/* 🚧 HINDRINGER (SMÅ) */
+/* 🚧 HINDRINGER */
 let obstacles = [];
 let score = 0;
 let running = false;
@@ -75,7 +120,10 @@ let rightPressed = false;
 document.addEventListener("keydown", e => {
     if (e.key === "ArrowLeft") leftPressed = true;
     if (e.key === "ArrowRight") rightPressed = true;
-    if (e.key.toLowerCase() === "t") switchTrack();
+
+    if (e.key.toLowerCase() === "t" || e.code === "Space") {
+        switchTrack();
+    }
 });
 
 document.addEventListener("keyup", e => {
@@ -104,34 +152,33 @@ function drawRoad() {
     ctx.stroke();
 }
 
-/* 🚧 SMÅ HINDRINGER */
+/* 🚧 HINDER PER BANE */
 function spawnObstacle() {
-    const type = Math.random();
-    let size;
-
-    if (type < 0.4) size = { w: 18, h: 18 };       // kjegle
-    else if (type < 0.7) size = { w: 22, h: 40 };  // liten bil
-    else size = { w: 14, h: 30 };                  // smal sperring
+    const o = track.obstacles[
+        Math.floor(Math.random() * track.obstacles.length)
+    ];
 
     obstacles.push({
         x: 150 + Math.random() * 100,
-        y: -50,
-        width: size.w,
-        height: size.h,
+        y: -40,
+        width: o.w,
+        height: o.h,
         speed: track.speed + Math.random() * 2,
-        color: ["#f39c12","#e74c3c","#ecf0f1","#f1c40f"]
-            [Math.floor(Math.random()*4)]
+        color: o.color
     });
 }
 
+/* 💥 KOLLISJON */
 function collision(a, b) {
-    return a.x < b.x + b.width &&
-           a.x + a.width > b.x &&
-           a.y < b.y + b.height &&
-           a.y + a.height > b.y;
+    return (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+    );
 }
 
-/* 🔁 BANEBYTTE */
+/* 🔁 BANEBYTTE – LETT */
 function switchTrack() {
     trackIndex = (trackIndex + 1) % tracks.length;
     track = tracks[trackIndex];
@@ -143,9 +190,13 @@ function startGame() {
     running = true;
     obstacles = [];
     score = 0;
+    player.x = 200;
+    player.velocity = 0;
+
     trackIndex = 0;
     track = tracks[0];
     document.getElementById("track").innerText = "Bane: " + track.name;
+
     update();
 }
 
@@ -153,10 +204,10 @@ function startGame() {
 function update() {
     if (!running) return;
 
-    ctx.clearRect(0,0,400,600);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawRoad();
 
-    // Myk styring
+    /* Myk styring */
     if (leftPressed) player.velocity -= 0.35;
     if (rightPressed) player.velocity += 0.35;
     player.velocity *= 0.9;
@@ -164,11 +215,11 @@ function update() {
     player.x += player.velocity;
     player.x = Math.max(115, Math.min(255, player.x));
 
-    // Spiller
+    /* Spiller */
     ctx.fillStyle = "red";
     ctx.fillRect(player.x, player.y, player.width, player.height);
 
-    // Hindringer
+    /* Hindringer */
     obstacles.forEach(o => {
         o.y += o.speed;
         ctx.fillStyle = o.color;
@@ -182,8 +233,9 @@ function update() {
 
     obstacles = obstacles.filter(o => o.y < 650);
 
-    // Mange små – men balansert
-    if (Math.random() < 0.12) spawnObstacle();
+    /* Spawn-rate (Tokyo litt farligere) */
+    let spawnRate = track.name === "Tokyo" ? 0.2 : 0.14;
+    if (Math.random() < spawnRate) spawnObstacle();
 
     score++;
     document.getElementById("score").innerText = score;
