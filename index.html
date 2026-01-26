@@ -48,50 +48,50 @@ const tracks = [
         name: "Los Angeles",
         road: "#333",
         edge: "#777",
-        speed: 5,
+        speed: 3,
         obstacles: [
-            { w: 10, h: 10, color: "#f1c40f" }, // kjegler
-            { w: 14, h: 26, color: "#e74c3c" }  // små biler
+            { w: 8, h: 8, color: "#f1c40f" }, // kjegler
+            { w: 12, h: 22, color: "#e74c3c" }  // små biler
         ]
     },
     {
         name: "Miami",
         road: "#00bcd4",
         edge: "#2ed573",
-        speed: 5,
+        speed: 3,
         obstacles: [
-            { w: 12, h: 12, color: "#ffffff" }, // strandting
-            { w: 16, h: 28, color: "#ff7675" }
+            { w: 10, h: 10, color: "#ffffff" }, // strandting
+            { w: 14, h: 24, color: "#ff7675" }
         ]
     },
     {
         name: "Tokyo",
         road: "#0b0014",
         edge: "#ff00ff",
-        speed: 7,
+        speed: 4,
         obstacles: [
-            { w: 8, h: 22, color: "#00ffea" },  // smale sperringer
-            { w: 12, h: 34, color: "#ff0055" }  // raske biler
+            { w: 6, h: 18, color: "#00ffea" },  // smale sperringer
+            { w: 10, h: 30, color: "#ff0055" }  // raske biler
         ]
     },
     {
         name: "London",
         road: "#2f3640",
         edge: "#718093",
-        speed: 6,
+        speed: 4,
         obstacles: [
-            { w: 12, h: 18, color: "#dcdde1" },
-            { w: 14, h: 30, color: "#273c75" }
+            { w: 10, h: 16, color: "#dcdde1" },
+            { w: 12, h: 26, color: "#273c75" }
         ]
     },
     {
         name: "Norwegian Fjords",
         road: "#1e3799",
         edge: "#81ecec",
-        speed: 5,
+        speed: 3,
         obstacles: [
-            { w: 10, h: 14, color: "#a4b0be" }, // steiner
-            { w: 12, h: 20, color: "#ced6e0" }  // isblokker
+            { w: 8, h: 12, color: "#a4b0be" }, // steiner
+            { w: 10, h: 18, color: "#ced6e0" }  // isblokker
         ]
     }
 ];
@@ -163,7 +163,7 @@ function spawnObstacle() {
         y: -40,
         width: o.w,
         height: o.h,
-        speed: track.speed + Math.random() * 2,
+        speed: track.speed + Math.random() * 1, // Langsommere
         color: o.color
     });
 }
@@ -233,9 +233,8 @@ function update() {
 
     obstacles = obstacles.filter(o => o.y < 650);
 
-    /* Spawn-rate (Tokyo litt farligere) */
-    let spawnRate = track.name === "Tokyo" ? 0.2 : 0.14;
-    if (Math.random() < spawnRate) spawnObstacle();
+    /* Mye færre hindringer og saktere */
+    if (Math.random() < 0.08) spawnObstacle(); // Færre hindringer
 
     score++;
     document.getElementById("score").innerText = score;
