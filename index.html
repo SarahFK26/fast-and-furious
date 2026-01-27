@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
-<title>Fast & Furious – Traffic Weave</title>
+<title>Fast & Furious – Traffic Weave (Easy Mode)</title>
 
 <style>
 body {
@@ -42,56 +42,56 @@ button {
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* 🌍 BANER MED EGEN HINDERTYPE */
+/* 🌍 BANER */
 const tracks = [
     {
         name: "Los Angeles",
         road: "#333",
         edge: "#777",
-        speed: 2,  // Ekstremt sakte!
+        speed: 1.2,
         obstacles: [
-            { w: 8, h: 8, color: "#f1c40f" }, // Kjegler
-            { w: 12, h: 22, color: "#e74c3c" }  // Små biler
+            { w: 6, h: 10, color: "#f1c40f" },
+            { w: 8, h: 14, color: "#e74c3c" }
         ]
     },
     {
-        name: "Miami",
-        road: "#00bcd4",
-        edge: "#2ed573",
-        speed: 2,  // Ekstremt sakte!
+        name: "Desert Highway",
+        road: "#c49b63",
+        edge: "#f5cd79",
+        speed: 1.1,
         obstacles: [
-            { w: 10, h: 10, color: "#ffffff" }, // Strandting
-            { w: 14, h: 24, color: "#ff7675" }
+            { w: 6, h: 8, color: "#eccc68" },
+            { w: 8, h: 12, color: "#a0522d" }
         ]
     },
     {
-        name: "Tokyo",
-        road: "#0b0014",
-        edge: "#ff00ff",
-        speed: 2,  // Ekstremt sakte!
+        name: "Arctic Ice Road",
+        road: "#dff9fb",
+        edge: "#c7ecee",
+        speed: 1.0,
         obstacles: [
-            { w: 6, h: 18, color: "#00ffea" },  // Smale sperringer
-            { w: 10, h: 30, color: "#ff0055" }  // Små biler
+            { w: 6, h: 10, color: "#7ed6df" },
+            { w: 8, h: 14, color: "#22a6b3" }
         ]
     },
     {
-        name: "London",
-        road: "#2f3640",
-        edge: "#718093",
-        speed: 2,  // Ekstremt sakte!
+        name: "Jungle Run",
+        road: "#2ecc71",
+        edge: "#27ae60",
+        speed: 1.3,
         obstacles: [
-            { w: 10, h: 16, color: "#dcdde1" },
-            { w: 12, h: 26, color: "#273c75" }
+            { w: 6, h: 12, color: "#145a32" },
+            { w: 8, h: 14, color: "#784212" }
         ]
     },
     {
-        name: "Norwegian Fjords",
-        road: "#1e3799",
-        edge: "#81ecec",
-        speed: 2,  // Ekstremt sakte!
+        name: "Night City Neon",
+        road: "#130f40",
+        edge: "#e056fd",
+        speed: 1.4,
         obstacles: [
-            { w: 8, h: 12, color: "#a4b0be" }, // Steiner
-            { w: 10, h: 18, color: "#ced6e0" }  // Isblokker
+            { w: 6, h: 12, color: "#00d2d3" },
+            { w: 8, h: 16, color: "#ff6b81" }
         ]
     }
 ];
@@ -152,18 +152,18 @@ function drawRoad() {
     ctx.stroke();
 }
 
-/* 🚧 HINDER PER BANE */
+/* 🚧 HINDER */
 function spawnObstacle() {
     const o = track.obstacles[
         Math.floor(Math.random() * track.obstacles.length)
     ];
 
     obstacles.push({
-        x: 150 + Math.random() * 100,
-        y: -40,
+        x: 160 + Math.random() * 80,
+        y: -30,
         width: o.w,
         height: o.h,
-        speed: track.speed + Math.random() * 0.5, // Ekstremt sakte
+        speed: track.speed,
         color: o.color
     });
 }
@@ -178,7 +178,7 @@ function collision(a, b) {
     );
 }
 
-/* 🔁 BANEBYTTE – LETT */
+/* 🔁 BYTT BANE */
 function switchTrack() {
     trackIndex = (trackIndex + 1) % tracks.length;
     track = tracks[trackIndex];
@@ -207,13 +207,13 @@ function update() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawRoad();
 
-    /* Myk styring */
-    if (leftPressed) player.velocity -= 0.2;
-    if (rightPressed) player.velocity += 0.2;
-    player.velocity *= 0.9;
+    /* Lett styring */
+    if (leftPressed) player.velocity -= 0.4;
+    if (rightPressed) player.velocity += 0.4;
 
+    player.velocity *= 0.85;
     player.x += player.velocity;
-    player.x = Math.max(115, Math.min(255, player.x));
+    player.x = Math.max(100, Math.min(275, player.x));
 
     /* Spiller */
     ctx.fillStyle = "red";
@@ -233,8 +233,8 @@ function update() {
 
     obstacles = obstacles.filter(o => o.y < 650);
 
-    /* Svært sjeldne hindringer */
-    if (Math.random() < 0.02) spawnObstacle(); // Ekstremt lav sannsynlighet
+    /* Ekstremt sjeldne hindringer */
+    if (Math.random() < 0.005) spawnObstacle();
 
     score++;
     document.getElementById("score").innerText = score;
